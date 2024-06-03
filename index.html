@@ -119,17 +119,13 @@
     height: 200px;
   }
 
-  .post-tag {
-    display: inline-block;
-    margin-right: 10px;
-    margin-bottom: 10px;
-    padding: 0 8px;
-    color: #717171;
-    border: 1px solid #9b9b9b;
-    border-radius: 25px;
-    white-space: nowrap;
+  .post-teaser {
+    font-size: 14px;
+    color: #707070;
+    line-height: 1.5em;
+    padding: 0;
+    margin: 0;
   }
-
   .filter-container {
     display: flex;
     flex-wrap: wrap;
@@ -176,21 +172,18 @@
   </header>
 
   <main class="container">
-    <!--   <div class="profile__header">
-          <div class="profile__title">Jemima Abu</div>
-          <div class="profile__website"><a class="profile__website-link" href="https://www.jemimaabu.com/" target="_blank">www.jemimaabu.com/</a></div>
-      
-          <ul class="profile__social-links">
-            <li class="profile__social-link__item"><a title="Twitter" class="profile__social-link profile__social-link--twitter" href="https://twitter.com/jemimaabu" target="_blank"><i class="fab profile__social-link-icon fa-twitter"></i></a></li>
-            <li class="profile__social-link__item"><a title="Github" class="profile__social-link profile__social-link--github" href="https://github.com/jemimaabu" target="_blank"><i class="fab profile__social-link-icon fa-github"></i></a></li>
-            <li class="profile__social-link__item"><a title="Linkedin" class="profile__social-link profile__social-link--linkedin" href="https://www.linkedin.com/in/jemimaabu" target="_blank"><i class="fab profile__social-link-icon fa-linkedin-in"></i></a></li>
-          </ul>
-        </div> -->
+    <div class="profile__header">
+        <div class="profile__title">Jemima Abu</div>
+        <div class="profile__website"><a class="profile__website-link" href="https://www.jemimaabu.com/" target="_blank">www.jemimaabu.com/</a></div>
+    
+        <ul class="profile__social-links">
+          <li class="profile__social-link__item"><a title="Twitter" class="profile__social-link profile__social-link--twitter" href="https://twitter.com/jemimaabu" target="_blank"><i class="fab profile__social-link-icon fa-twitter"></i></a></li>
+          <li class="profile__social-link__item"><a title="Github" class="profile__social-link profile__social-link--github" href="https://github.com/jemimaabu" target="_blank"><i class="fab profile__social-link-icon fa-github"></i></a></li>
+          <li class="profile__social-link__item"><a title="Linkedin" class="profile__social-link profile__social-link--linkedin" href="https://www.linkedin.com/in/jemimaabu" target="_blank"><i class="fab profile__social-link-icon fa-linkedin-in"></i></a></li>
+        </ul>
+      </div>
 
     <div class="profile__posts">
-      <div class="filter-container">
-
-      </div>
       <div class="card-header">
         <div class="card-header__title">Tutorials</div>
       </div>
@@ -205,22 +198,14 @@
     const postsContainer = document.querySelector(".posts-container");
     const filterContainer = document.querySelector(".filter-container");
 
-    fetch("https://gist.githubusercontent.com/jemimaabu/b89339c1b7e5f81f8737fb66a858b6fc/raw/cdded4a10dbc98858481b5aedbcce3f3026dc271/tutorials"
+    fetch("https://gist.githubusercontent.com/jemimaabu/2896f62a5943f9415c07975a7588a876/raw/4964463926d348951daaf0c87e9e465f6a5c006d/cache-data"
     ).then(async (response) => {
       postsData = await response.json();
       postsData.map((post) => createPost(post));
-      filterData = [
-        ...new Set(
-          postsData
-            .map((post) => post.categories)
-            .reduce((acc, curVal) => acc.concat(curVal), [])
-        )
-      ];
-      filterData.map((filter) => createFilter(filter));
     });
 
     const createPost = (postData) => {
-      const { title, link, image, categories } = postData;
+      const { title, link, image, description } = postData;
       const post = document.createElement("div");
       post.className = "post";
       post.innerHTML = `
@@ -229,62 +214,11 @@
       </a>
       <div class="post-content">
         <p class="post-title">${title}</p>
-        <div class="post-tags">
-          ${categories
-          .map((category) => {
-            return '<span class="post-tag">' + category + "</span>";
-          })
-          .join("")}
-        </div>
+        <p class="post-teaser">${description}</p>
       </div>
   `;
 
       postsContainer.append(post);
-    };
-
-    const createFilter = (filter) => {
-      const filterButton = document.createElement("button");
-      filterButton.className = "filter-button";
-      filterButton.innerText = filter;
-      filterButton.setAttribute('data-state', 'inactive');
-      filterButton.addEventListener("click", (e) =>
-        handleButtonClick(e, filter)
-      );
-
-      filterContainer.append(filterButton);
-    };
-
-    const resetFilterButtons = (currentButton) => {
-      const filterButtons = document.querySelectorAll('.filter-button');
-      [...filterButtons].map(button => {
-        if (button != currentButton) {
-          button.classList.remove('is-active');
-          button.setAttribute('data-state', 'inactive')
-        }
-      })
-    }
-
-    const handleButtonClick = (e, param) => {
-      const button = e.target;
-      const buttonState = button.getAttribute('data-state');
-      resetFilterButtons(button);
-
-      if (buttonState == 'inactive') {
-        button.classList.add('is-active');
-        button.setAttribute('data-state', 'active');
-        handleFilterPosts(param)
-      } else {
-        button.classList.remove('is-active');
-        button.setAttribute('data-state', 'inactive')
-        resetPosts()
-      }
-    }
-
-    const handleFilterPosts = (param) => {
-      let filteredPosts = [...postsData].filter(post => post.categories.includes(param))
-
-      postsContainer.innerHTML = "";
-      filteredPosts.map(post => createPost(post))
     };
 
     const resetPosts = () => {
