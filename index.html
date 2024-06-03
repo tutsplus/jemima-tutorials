@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Caching Data with JavaScript</title>
+</head>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font: normal 16px/26px system-ui, Roboto, Arial, sans-serif;
+    background: #fefefe;
+    color: #2a3744;
+    margin: 0;
+    padding: 0;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: none;
+    overflow-x: hidden;
+  }
+
+  header {
+    background: #282828;
+    position: relative;
+    font-family: system-ui, Roboto, sans-serif;
+    min-height: 75px;
+    display: flex;
+    align-items: center;
+  }
+
+  a {
+    color: #0085b6;
+    text-decoration: none;
+    border: none;
+  }
+
+  .container {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 24px;
+    width: 100%;
+  }
+
+  .profile__header {
+    margin-bottom: 20px;
+  }
+
+  .profile__title {
+    margin: 16px 0;
+    font: 700 43px/1.2em system-ui, Roboto, Arial, sans-serif;
+  }
+
+  .profile__social-links {
+    list-style: none;
+    padding-left: 0;
+    margin: 10px 0 0;
+    width: 100%;
+  }
+
+  .profile__social-link__item {
+    display: inline-block;
+    margin-left: 10px;
+  }
+
+  .profile__social-link__item:first-child {
+    margin-left: 0;
+  }
+
+  .card-header__title {
+    font-weight: 700;
+    font-size: 14px;
+    color: #8fa6b3;
+  }
+
+  .posts-container {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .post {
+    position: relative;
+    width: 300px;
+    margin-right: 30px;
+    margin-bottom: 40px;
+    border: 1px solid #e1e8ed;
+    border-radius: 4px;
+    margin-top: 13px;
+    min-height: 300px;
+    height: auto;
+  }
+
+  .post-title {
+    font: 700 18px/1.4em system-ui, Roboto, Arial, sans-serif;
+    color: #4a4a4a;
+    margin-top: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .post-content {
+    padding: 16px;
+  }
+
+  .post-preview {
+    overflow: hidden;
+    width: 100%;
+    text-align: center;
+    display: block;
+    margin: 0 auto;
+    border-bottom: 1px solid #e1e8ed;
+    line-height: 0;
+    height: 200px;
+  }
+
+  .post-tag {
+    display: inline-block;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    padding: 0 8px;
+    color: #717171;
+    border: 1px solid #9b9b9b;
+    border-radius: 25px;
+    white-space: nowrap;
+  }
+
+  .filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 32px 0;
+    border-top: 1px solid #e4e4e4;
+    border-bottom: 1px solid #e4e4e4;
+    margin-bottom: 32px;
+  }
+
+  .filter-button {
+    transition: background-color 200ms, color 200ms;
+    background-color: transparent;
+    font: inherit;
+    cursor: pointer;
+    display: inline-block;
+    padding: 0 8px;
+    color: #717171;
+    border: 1px solid #9b9b9b;
+    border-radius: 25px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .filter-button:hover {
+    background-color: #f3f3f3;
+    color: #3a3a3a;
+  }
+
+  .filter-button.is-active {
+    background-color: #0085b6;
+    border-color: #0085b6;
+    color: #fff;
+  }
+</style>
+
+<body>
+  <header>
+    <div class="container header-content">
+      <img alt="envato-tuts+" class="logo"
+        src="https://static.tutsplus.com/packs/media/images/tuts_logo-ae9e557ae6c08db82f47e6047900e39b.svg">
+    </div>
+  </header>
+
+  <main class="container">
+    <!--   <div class="profile__header">
+          <div class="profile__title">Jemima Abu</div>
+          <div class="profile__website"><a class="profile__website-link" href="https://www.jemimaabu.com/" target="_blank">www.jemimaabu.com/</a></div>
+      
+          <ul class="profile__social-links">
+            <li class="profile__social-link__item"><a title="Twitter" class="profile__social-link profile__social-link--twitter" href="https://twitter.com/jemimaabu" target="_blank"><i class="fab profile__social-link-icon fa-twitter"></i></a></li>
+            <li class="profile__social-link__item"><a title="Github" class="profile__social-link profile__social-link--github" href="https://github.com/jemimaabu" target="_blank"><i class="fab profile__social-link-icon fa-github"></i></a></li>
+            <li class="profile__social-link__item"><a title="Linkedin" class="profile__social-link profile__social-link--linkedin" href="https://www.linkedin.com/in/jemimaabu" target="_blank"><i class="fab profile__social-link-icon fa-linkedin-in"></i></a></li>
+          </ul>
+        </div> -->
+
+    <div class="profile__posts">
+      <div class="filter-container">
+
+      </div>
+      <div class="card-header">
+        <div class="card-header__title">Tutorials</div>
+      </div>
+      <div class="posts-container">
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let postsData = "";
+    let filterData = "";
+    const postsContainer = document.querySelector(".posts-container");
+    const filterContainer = document.querySelector(".filter-container");
+
+    fetch("https://gist.githubusercontent.com/jemimaabu/b89339c1b7e5f81f8737fb66a858b6fc/raw/cdded4a10dbc98858481b5aedbcce3f3026dc271/tutorials"
+    ).then(async (response) => {
+      postsData = await response.json();
+      postsData.map((post) => createPost(post));
+      filterData = [
+        ...new Set(
+          postsData
+            .map((post) => post.categories)
+            .reduce((acc, curVal) => acc.concat(curVal), [])
+        )
+      ];
+      filterData.map((filter) => createFilter(filter));
+    });
+
+    const createPost = (postData) => {
+      const { title, link, image, categories } = postData;
+      const post = document.createElement("div");
+      post.className = "post";
+      post.innerHTML = `
+      <a class="post-preview" href="${link}" target="_blank">
+        <img class="post-image" src="${image}">
+      </a>
+      <div class="post-content">
+        <p class="post-title">${title}</p>
+        <div class="post-tags">
+          ${categories
+          .map((category) => {
+            return '<span class="post-tag">' + category + "</span>";
+          })
+          .join("")}
+        </div>
+      </div>
+  `;
+
+      postsContainer.append(post);
+    };
+
+    const createFilter = (filter) => {
+      const filterButton = document.createElement("button");
+      filterButton.className = "filter-button";
+      filterButton.innerText = filter;
+      filterButton.setAttribute('data-state', 'inactive');
+      filterButton.addEventListener("click", (e) =>
+        handleButtonClick(e, filter)
+      );
+
+      filterContainer.append(filterButton);
+    };
+
+    const resetFilterButtons = (currentButton) => {
+      const filterButtons = document.querySelectorAll('.filter-button');
+      [...filterButtons].map(button => {
+        if (button != currentButton) {
+          button.classList.remove('is-active');
+          button.setAttribute('data-state', 'inactive')
+        }
+      })
+    }
+
+    const handleButtonClick = (e, param) => {
+      const button = e.target;
+      const buttonState = button.getAttribute('data-state');
+      resetFilterButtons(button);
+
+      if (buttonState == 'inactive') {
+        button.classList.add('is-active');
+        button.setAttribute('data-state', 'active');
+        handleFilterPosts(param)
+      } else {
+        button.classList.remove('is-active');
+        button.setAttribute('data-state', 'inactive')
+        resetPosts()
+      }
+    }
+
+    const handleFilterPosts = (param) => {
+      let filteredPosts = [...postsData].filter(post => post.categories.includes(param))
+
+      postsContainer.innerHTML = "";
+      filteredPosts.map(post => createPost(post))
+    };
+
+    const resetPosts = () => {
+      postsContainer.innerHTML = "";
+      postsData.map((post) => createPost(post));
+    }
+  </script>
+</body>
+
+</html>
