@@ -28,7 +28,7 @@
       margin-top: 0;
     }
 
-    .hidden {
+    .paginated-list li:not(.active) {
       display: none;
     }
 
@@ -84,7 +84,7 @@
 <body>
   <main>
     <h1>Updating Page Query with Vanilla JavaScript</h1>
-    <ul id="paginated-list" data-current-page="1" aria-live="polite">
+    <ul class="paginated-list" id="paginated-list" data-current-page="1" aria-live="polite">
       <li>Item 1</li>
       <li>Item 2</li>
       <li>Item 3</li>
@@ -229,9 +229,9 @@
       const currRange = pageNum * paginationLimit;
 
       listItems.forEach((item, index) => {
-        item.classList.add("hidden");
+        item.classList.remove("active");
         if (index >= prevRange && index < currRange) {
-          item.classList.remove("hidden");
+          item.classList.add("active");
         }
       });
     };
