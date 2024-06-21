@@ -218,8 +218,8 @@
       }
     };
 
-    const setCurrentPage = (pageNum, onload = false) => {
-      currentPage = pageNum;
+    const setCurrentPage = (pageNumber, onload = false) => {
+      currentPage = pageNumber;
 
       if (!onload) {
         updatePageParams(currentPage);
@@ -228,8 +228,8 @@
       handleActivePageNumber();
       handlePageButtonsStatus();
 
-      const prevRange = (pageNum - 1) * paginationLimit;
-      const currRange = pageNum * paginationLimit;
+      const prevRange = (pageNumber - 1) * paginationLimit;
+      const currRange = pageNumber * paginationLimit;
 
       listItems.forEach((item, index) => {
         item.classList.remove("active");
@@ -247,13 +247,13 @@
 
     const getPageParams = () => {
       const currentUrl = new URL(window.location)
-      const params = new URLSearchParams(currentUrl.search)
+      const page = currentUrl.searchParams.get('page')
 
-      if (!params.get('page')) {
+      if (!page) {
         return
       }
       
-      currentPage = Number(params.get('page'))
+      currentPage = Number(page)
     }
 
     window.addEventListener("load", () => {
