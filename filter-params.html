@@ -1,1 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Updating Filter Queries with Vanilla JavaScript</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font: normal 16px/26px system-ui, Roboto, Arial, sans-serif;
+      background: #fefefe;
+      color: #2a3744;
+      margin: 0;
+      padding: 0;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -webkit-text-size-adjust: none;
+      overflow-x: hidden;
+    }
+
+    header {
+      background: #282828;
+      position: relative;
+      font-family: system-ui, Roboto, sans-serif;
+      min-height: 75px;
+      display: flex;
+      align-items: center;
+    }
+
+    a {
+      color: #0085b6;
+      text-decoration: none;
+      border: none;
+    }
+
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0 24px;
+      width: 100%;
+    }
+
+    main.container {
+      margin-top: 32px;
+    }
+
+    .profile__header {
+      margin-bottom: 20px;
+    }
+
+    .profile__title {
+      margin: 16px 0;
+      font: 700 43px/1.2em system-ui, Roboto, Arial, sans-serif;
+    }
+
+    .profile__social-links {
+      list-style: none;
+      padding-left: 0;
+      margin: 10px 0 0;
+      width: 100%;
+    }
+
+    .profile__social-link__item {
+      display: inline-block;
+      margin-left: 10px;
+    }
+
+    .profile__social-link__item:first-child {
+      margin-left: 0;
+    }
+
+    .container__title {
+      font-weight: 700;
+      font-size: 14px;
+      color: #8fa6b3;
+    }
+
+    #posts-container {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .post {
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      width: 300px;
+      margin-right: 30px;
+      margin-bottom: 40px;
+      border: 1px solid #e1e8ed;
+      border-radius: 4px;
+      margin-top: 12px;
+      min-height: 300px;
+      height: auto;
+    }
+
+    .post-title {
+      font: 700 18px/1.4em system-ui, Roboto, Arial, sans-serif;
+      color: #4a4a4a;
+      margin-top: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .post-content {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+      padding: 16px;
+    }
+
+    .post-preview {
+      overflow: hidden;
+      width: 100%;
+      text-align: center;
+      display: block;
+      margin: 0 auto;
+      border-bottom: 1px solid #e1e8ed;
+      line-height: 0;
+      height: 200px;
+    }
+
+    .post-tag {
+      display: inline-block;
+      margin-right: 10px;
+      margin-bottom: 10px;
+      padding: 0 8px;
+      color: #717171;
+      border: 1px solid #9b9b9b;
+      border-radius: 25px;
+      white-space: nowrap;
+    }
+
+    .post-footer {
+      text-align: right;
+      margin-top: auto;
+    }
+
+    .post-level {
+      font: 700 12px/1 system-ui, Roboto, Arial, sans-serif;
+      text-transform: uppercase;
+      display: inline-block;
+      -webkit-font-smoothing: subpixel-antialiased;
+      color: #0085b6;
+    }
+
+    .filter-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      gap: 10px;
+      padding: 16px 0 32px;
+      border-bottom: 1px solid #e4e4e4;
+      margin-bottom: 16px;
+    }
+
+    .filter-button {
+      transition: background-color 200ms, color 200ms;
+      background-color: transparent;
+      font: inherit;
+      cursor: pointer;
+      display: inline-block;
+      padding: 0 8px;
+      color: #717171;
+      border: 1px solid #9b9b9b;
+      border-radius: 25px;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .filter-button:hover {
+      background-color: #f3f3f3;
+      color: #3a3a3a;
+    }
+
+    .filter-button[data-state=active] {
+      background-color: #0085b6;
+      border-color: #0085b6;
+      color: #fff;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="container header-content">
+      <img alt="envato-tuts+" class="logo"
+        src="https://static.tutsplus.com/packs/media/images/tuts_logo-ae9e557ae6c08db82f47e6047900e39b.svg">
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="container__title">Categories</div>
+    <div id="post-categories" class="filter-container"></div>
+    <div class="container__title">Level</div>
+    <div id="post-levels" class="filter-container"></div>
+    <div class="container__title">
+      Tutorials (<span id="post-count"></span>)
+    </div>
+    <div id="posts-container"></div>
+    <p id="no-results"></p>
+  </main>
+
+  <script>
+    let postsData = "";
+    let currentFilters = {
+      categories: [],
+      level: []
+    };
+
+    const postsContainer = document.querySelector("#posts-container");
+    const categoriesContainer = document.querySelector("#post-categories");
+    const levelsContainer = document.querySelector("#post-levels");
+    const postCount = document.querySelector("#post-count");
+    const noResults = document.querySelector("#no-results");
+
+    fetch(
+      "https://gist.githubusercontent.com/jemimaabu/564beec0a30dbd7d63a90a153d2bc80b/raw/12741cce73c71c179381cc9e3b5f79988ea76a45/tutorial-levels"
+    ).then(async (response) => {
+      postsData = await response.json();
+      postsData.map((post) => createPost(post));
+      postCount.innerText = postsData.length;
+
+      categoriesData = [
+        ...new Set(
+          postsData
+            .map((post) => post.categories)
+            .reduce((acc, curVal) => acc.concat(curVal), [])
+        )
+      ];
+      categoriesData.map((category) =>
+        createFilter("categories", category, categoriesContainer)
+      );
+
+      levelData = [...new Set(postsData.map((post) => post.level))];
+      levelData.map((level) => createFilter("level", level, levelsContainer));
+
+      getFilterParams()
+    });
+
+    const createPost = (postData) => {
+      const { title, link, image, categories, level } = postData;
+      const post = document.createElement("div");
+      post.className = "post";
+      post.innerHTML = `
+      <a class="post-preview" href="${link}" target="_blank">
+        <img class="post-image" src="${image}">
+      </a>
+      <div class="post-content">
+        <p class="post-title">${title}</p>
+        <div class="post-tags">
+          ${categories
+          .map((category) => {
+            return '<span class="post-tag">' + category + "</span>";
+          })
+          .join("")}
+        </div>
+        <div class="post-footer">
+          <span class="post-level">${level}</span>
+        </div>
+      </div>
+  `;
+
+      postsContainer.append(post);
+    };
+
+    const createFilter = (key, param, container) => {
+      const filterButton = document.createElement("button");
+      filterButton.className = "filter-button";
+      filterButton.innerText = param;
+      filterButton.setAttribute("data-key", key);
+      filterButton.setAttribute("data-param", param);
+      filterButton.addEventListener("click", (e) =>
+        handleButtonClick(e, key, param, container)
+      );
+
+      const currentUrl = new URL(window.location)
+      const filterKey = currentUrl.searchParams.get(key)
+      if (filterKey && filterKey.includes(param)) {
+        filterButton.setAttribute("data-state", "active");
+      } else {
+        filterButton.setAttribute("data-state", "inactive");
+      }
+
+      container.append(filterButton);
+    };
+
+    const handleButtonClick = (e, key, param, container) => {
+      const button = e.target;
+      const buttonState = button.getAttribute("data-state");
+      if (buttonState == "inactive") {
+        button.setAttribute("data-state", "active");
+        currentFilters[key].push(param);
+        updateFilterParams(key, param);
+        handleFilterPosts(currentFilters);
+      } else {
+        button.setAttribute("data-state", "inactive");
+        currentFilters[key] = currentFilters[key].filter((item) => item !== param);
+        removeFilterParams(key, param);
+        handleFilterPosts(currentFilters);
+      }
+    };
+
+    const updateFilterParams = (filter, value) => {
+      const currentUrl = new URL(window.location)
+
+      if (currentUrl.searchParams.get(filter)) {
+        const currentParams = currentUrl.searchParams.get(filter)
+        const updatedParams = [
+          ...currentParams.split(','),
+          value,
+        ].join(',')
+
+        currentUrl.searchParams.set(filter, updatedParams)
+      } else {
+        currentUrl.searchParams.set(filter, value)
+      }
+
+      window.history.replaceState({}, '', currentUrl)
+    }
+
+    const removeFilterParams = (filter, value) => {
+      const currentUrl = new URL(window.location)
+
+      if (!currentUrl.searchParams.get(filter)) {
+        return
+      }
+
+      const currentParams = currentUrl.searchParams.get(filter)
+      // remove selected value from params
+      const updatedParams = currentParams.split(',').filter(param => param !== value)
+
+      if (updatedParams.length) {
+        currentUrl.searchParams.set(filter, updatedParams.join(','))
+      } else {
+        // delete all filter params if no value is selected
+        currentUrl.searchParams.delete(filter)
+      }
+
+      window.history.replaceState({}, '', currentUrl)
+    }
+
+    const getFilterParams = () => {
+      const currentUrl = new URL(window.location)
+
+      if (currentUrl.searchParams.size <= 0) {
+        return
+      }
+
+      currentUrl.searchParams.forEach((value, key) => {
+        currentFilters[key] = value.split(',')
+      });
+
+      handleFilterPosts(currentFilters);
+    }
+
+    const handleFilterPosts = (filters) => {
+      let filteredPosts = [...postsData];
+      let filterKeys = Object.keys(filters);
+
+      filterKeys.forEach((key) => {
+        let currentKey = filters[key]
+        if (currentKey.length <= 0) {
+          return;
+        }
+
+        filteredPosts = filteredPosts.filter((post) => {
+          let currentValue = post[key]
+          return Array.isArray(currentValue)
+            ? currentValue.some((val) => currentKey.includes(val))
+            : currentKey.includes(currentValue);
+        });
+      });
+
+      postCount.innerText = filteredPosts.length;
+
+      if (filteredPosts.length == 0) {
+        noResults.innerText = "Sorry, we couldn't find any results.";
+      } else {
+        noResults.innerText = "";
+      }
+
+      postsContainer.innerHTML = "";
+      filteredPosts.map((post) => createPost(post));
+    };
+
+  </script>
+</body>
+
+</html>
