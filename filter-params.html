@@ -283,8 +283,8 @@
       );
 
       const currentUrl = new URL(window.location)
-      const filterKey = currentUrl.searchParams.get(key)
-      if (filterKey && filterKey.includes(param)) {
+      const filterKey = currentUrl.searchParams.getAll(key)
+      if (filterKey.includes(param)) {
         filterButton.setAttribute("data-state", "active");
       } else {
         filterButton.setAttribute("data-state", "inactive");
@@ -311,40 +311,13 @@
 
     const updateFilterParams = (filter, value) => {
       const currentUrl = new URL(window.location)
-
-      if (currentUrl.searchParams.get(filter)) {
-        const currentParams = currentUrl.searchParams.get(filter)
-        const updatedParams = [
-          ...currentParams.split(','),
-          value,
-        ].join(',')
-
-        currentUrl.searchParams.set(filter, updatedParams)
-      } else {
-        currentUrl.searchParams.set(filter, value)
-      }
-
+      currentUrl.searchParams.append(filter, value)
       window.history.replaceState({}, '', currentUrl)
     }
 
     const removeFilterParams = (filter, value) => {
       const currentUrl = new URL(window.location)
-
-      if (!currentUrl.searchParams.get(filter)) {
-        return
-      }
-
-      const currentParams = currentUrl.searchParams.get(filter)
-      // remove selected value from params
-      const updatedParams = currentParams.split(',').filter(param => param !== value)
-
-      if (updatedParams.length) {
-        currentUrl.searchParams.set(filter, updatedParams.join(','))
-      } else {
-        // delete all filter params if no value is selected
-        currentUrl.searchParams.delete(filter)
-      }
-
+      currentUrl.searchParams.delete(filter, value)
       window.history.replaceState({}, '', currentUrl)
     }
 
@@ -356,7 +329,7 @@
       }
 
       currentUrl.searchParams.forEach((value, key) => {
-        currentFilters[key] = value.split(',')
+        currentFilters[key].push(value)
       });
 
       handleFilterPosts(currentFilters);
